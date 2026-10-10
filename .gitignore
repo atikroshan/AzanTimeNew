@@ -10,13 +10,17 @@
 /.idea/assetWizardSettings.xml
 .DS_Store
 /build
+/.build-outputs
 /captures
 .externalNativeBuild
 .cxx
 local.properties
 .env
 debug.keystore
-*.apk
+# Allow distribution apks in apk/ folder
+!apk/
+!apk/*.apk
+!*.apk
 *.ppm
 *.zip
 *.hprof
