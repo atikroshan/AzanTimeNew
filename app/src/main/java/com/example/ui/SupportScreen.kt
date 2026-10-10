@@ -696,10 +696,10 @@ fun SupportScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Share App & Earn Sawab",
-                                fontSize = 13.5.sp,
+                                text = "Share App & Earn Sawab (Disabled)",
+                                fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White.copy(alpha = 0.45f)
+                                color = Color.White.copy(alpha = 0.40f)
                             )
                         }
                     }
