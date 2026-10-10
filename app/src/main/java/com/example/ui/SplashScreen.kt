@@ -414,7 +414,7 @@ fun SplashScreen(
 
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        // Punchline in pure white constrained under title
+                        // Punchline in clean pure white without white glow/shadow
                         Text(
                             text = "\"AAO ALLAH KI RAAH MEIN CHALE\"",
                             color = Color.White.copy(alpha = 0.96f),
@@ -425,7 +425,6 @@ fun SplashScreen(
                             textAlign = TextAlign.Center,
                             modifier = Modifier
                                 .fillMaxWidth(0.85f)
-                                .shadow(8.dp, spotColor = Color.White)
                         )
                     }
                 }
