@@ -250,10 +250,9 @@ fun AzanScreen(viewModel: AzanViewModel, uiState: com.example.ui.UIState, modifi
         current.timeInMillis >= target.timeInMillis
     }
 
-    var selectedTab by remember { mutableStateOf("home") } // "record", "home", or "ramazan"
+    var selectedTab by remember { mutableStateOf("home") } // "support", "home", or "ramazan"
     var showAdminLoginDialog by remember { mutableStateOf(false) }
     var showAdminPanel by remember { mutableStateOf(false) }
-    var showSupportScreen by remember { mutableStateOf(false) }
     var showMasjidSelectorScreen by remember { mutableStateOf(false) }
 
     var showUpdateDialog by remember { mutableStateOf(false) }
@@ -291,10 +290,10 @@ fun AzanScreen(viewModel: AzanViewModel, uiState: com.example.ui.UIState, modifi
         "hi" -> "होम"
         else -> "Home"
     }
-    val taqwaLabel = when (uiState.language) {
-        "ur" -> "تقویٰ"
-        "hi" -> "तक़वा"
-        else -> "Taqwa"
+    val supportLabel = when (uiState.language) {
+        "ur" -> "سپورٹ"
+        "hi" -> "सपोर्ट"
+        else -> "Support"
     }
     val ramazanLabel = when (uiState.language) {
         "ur" -> "رمضان"
@@ -319,14 +318,6 @@ fun AzanScreen(viewModel: AzanViewModel, uiState: com.example.ui.UIState, modifi
             viewModel = viewModel,
             uiState = uiState,
             onBack = { showAdminPanel = false }
-        )
-    } else if (showSupportScreen) {
-        BackHandler { showSupportScreen = false }
-        com.example.ui.SupportScreen(
-            uiState = uiState,
-            onBack = { showSupportScreen = false },
-            onLangSelect = { viewModel.setLanguage(it) },
-            onMasjidSubmitted = { viewModel.syncGoogleSheet() }
         )
     } else {
         if (showUpdateDialog && availableUpdateInfo != null) {
@@ -355,13 +346,13 @@ fun AzanScreen(viewModel: AzanViewModel, uiState: com.example.ui.UIState, modifi
                     horizontalArrangement = Arrangement.SpaceAround,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Left: Taqwa Button (Circle shape)
+                    // Left: Support Button (Circle shape)
                     NavCircleItem(
-                        selected = selectedTab == "record",
-                        onClick = { selectedTab = "record" },
-                        icon = if (selectedTab == "record") Icons.Filled.DateRange else Icons.Outlined.DateRange,
-                        label = taqwaLabel,
-                        testTag = "nav_taqwa_button"
+                        selected = selectedTab == "support",
+                        onClick = { selectedTab = "support" },
+                        icon = if (selectedTab == "support") Icons.Filled.HeadsetMic else Icons.Outlined.HeadsetMic,
+                        label = supportLabel,
+                        testTag = "nav_support_button"
                     )
 
                     // Center: Home Button (Circle shape)
@@ -414,52 +405,12 @@ fun AzanScreen(viewModel: AzanViewModel, uiState: com.example.ui.UIState, modifi
                 label = "screenTransition"
             ) { tab ->
                 when (tab) {
-                    "record" -> {
-                        com.example.ui.TrackerBoardContent(
+                    "support" -> {
+                        com.example.ui.SupportScreen(
                             uiState = uiState,
-                            onDateSelected = { month, day ->
-                                viewModel.selectDate(month, day)
-                            },
-                            onLanguageSelect = { viewModel.setLanguage(it) },
-                            onTogglePrayer = { month, day, prayerName ->
-                                val now = Calendar.getInstance(TimeZone.getTimeZone("Asia/Kolkata"))
-                                val todayM = now.get(Calendar.MONTH) + 1
-                                val todayD = now.get(Calendar.DAY_OF_MONTH)
-                                if (month == todayM && day == todayD) {
-                                    val isFriday = now.get(Calendar.DAY_OF_WEEK) == Calendar.FRIDAY
-                                    val jammatTimeStr = getEffectiveJammatTime(prayerName, "12:00", uiState.customJammatTimes, isFriday, uiState.selectedMasjid)
-                                    val (isUnlocked, unlockFormatted) = checkPrayerUnlocked(jammatTimeStr, "12:00", now, prayerName)
-                                    val currentLog = uiState.allLogs.find { it.month == month && it.day == day }
-                                    val isAlreadyPrayed = when (prayerName.lowercase()) {
-                                        "fajr" -> currentLog?.fajrPrayed == true
-                                        "dhuhr", "zohr", "jum'ah" -> currentLog?.dhuhrPrayed == true
-                                        "asr" -> currentLog?.asrPrayed == true
-                                        "maghrib" -> currentLog?.maghribPrayed == true
-                                        "isha" -> currentLog?.ishaPrayed == true
-                                        else -> false
-                                    }
-                                    if (!isAlreadyPrayed && !isUnlocked) {
-                                        val jammatDisplay = formatTo12Hour(jammatTimeStr)
-                                        val msg = when (uiState.language) {
-                                            "ur" -> "حاضری کا نشان جماعت ($jammatDisplay) کے 10 منٹ بعد ($unlockFormatted پر) فعال ہوگا۔"
-                                            "hi" -> "टिक मार्क जमात ($jammatDisplay) के 10 मिनट बाद ($unlockFormatted पर) चालू होगा।"
-                                            else -> "Tick mark will unlock at $unlockFormatted (10 min after $jammatDisplay jammat)."
-                                        }
-                                        android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
-                                        return@TrackerBoardContent
-                                    }
-                                }
-                                viewModel.togglePrayerForDate(month, day, prayerName)
-                            },
-                            onRestorePoints = { points ->
-                                viewModel.setRestoredTaqwaPoints(points)
-                            },
-                            onBackupTaqwa = { userId, onResult ->
-                                viewModel.backupTaqwa(userId, onResult)
-                            },
-                            onRestoreTaqwa = { userId, onResult ->
-                                viewModel.restoreTaqwa(userId, onResult)
-                            }
+                            onBack = { selectedTab = "home" },
+                            onLangSelect = { viewModel.setLanguage(it) },
+                            onMasjidSubmitted = { viewModel.syncGoogleSheet() }
                         )
                     }
                     "ramazan" -> {
@@ -473,8 +424,7 @@ fun AzanScreen(viewModel: AzanViewModel, uiState: com.example.ui.UIState, modifi
                             viewModel = viewModel,
                             uiState = uiState,
                             onOpenAdminLogin = { showAdminLoginDialog = true },
-                            onChangeMasjid = { showMasjidSelectorScreen = true },
-                            onOpenSupport = { showSupportScreen = true }
+                            onChangeMasjid = { showMasjidSelectorScreen = true }
                         )
                     }
                 }
@@ -502,7 +452,6 @@ fun AzanHomeContent(
     uiState: com.example.ui.UIState,
     onOpenAdminLogin: () -> Unit = {},
     onChangeMasjid: () -> Unit = {},
-    onOpenSupport: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -517,20 +466,18 @@ fun AzanHomeContent(
                 .weight(1f),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // Top Row: 3 Language Circles on Left (E, ह, ا) + Support Icon Button on Right (ONLY on Home!)
+            // Top Row: 3 Language Circles on Left (E, ह, ا)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 2.dp, vertical = 2.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 LanguageCirclesRow(
                     currentLang = uiState.language,
                     onLangSelect = { viewModel.setLanguage(it) }
                 )
-
-                SupportIconButton(onClick = onOpenSupport)
             }
 
             // Masjid Dropdown Selector (100+ Masajid)
@@ -733,29 +680,6 @@ fun LanguageCircleButton(
         onLangSelect = onLangSelect,
         modifier = modifier
     )
-}
-
-@Composable
-fun SupportIconButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .size(34.dp)
-            .clip(CircleShape)
-            .background(Color(0xFF131926))
-            .border(1.dp, Color(0xFFF3DE8E).copy(alpha = 0.5f), CircleShape)
-            .clickable { onClick() },
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.HeadsetMic,
-            contentDescription = "Support",
-            tint = Color(0xFFF3DE8E),
-            modifier = Modifier.size(18.dp)
-        )
-    }
 }
 
 @Composable
